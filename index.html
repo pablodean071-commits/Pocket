@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<title>Pocket BDT — Expense Tracker</title>
+<style>
+:root{--bg:#f3f7f7;--card:#fff;--ink:#153238;--muted:#62777b;--brand:#0f766e;--brand2:#115e59;--line:#dce7e7;--red:#b42318;--orange:#b45309;--green:#087443}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:15px}
+header{background:linear-gradient(135deg,#115e59,#0f766e);color:white;padding:22px 16px 18px;border-radius:0 0 22px 22px}
+.wrap{max-width:760px;margin:auto}header .top{display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:22px;margin:0}header p{margin:5px 0 0;color:#d6f5f0;font-size:13px}
+main{padding:14px 12px 90px;max-width:760px;margin:auto}.balance{margin-top:17px;background:#ffffff1a;border:1px solid #ffffff35;border-radius:16px;padding:15px}.small{font-size:12px;color:var(--muted)}header .small{color:#d6f5f0}.big{font-size:30px;font-weight:800;letter-spacing:-.5px;margin:3px 0 12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 10px;min-width:0}.stat .v{font-weight:750;font-size:16px;margin-top:5px;overflow-wrap:anywhere}
+.tabs{position:fixed;z-index:5;bottom:0;left:0;right:0;background:#fffffff2;backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:center;padding:7px max(6px,env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}
+.tabs button{border:0;background:transparent;color:var(--muted);font-size:11px;flex:1;max-width:150px;padding:7px 2px;border-radius:10px}.tabs button span{display:block;font-size:19px;margin-bottom:2px}.tabs button.active{background:#d9f2ee;color:var(--brand2);font-weight:750}
+.panel{display:none}.panel.active{display:block}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:12px;box-shadow:0 2px 7px #163e4308}
+h2{font-size:17px;margin:0 0 13px}h3{font-size:14px;margin:0 0 8px}
+label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 5px}
+input,select,textarea{font:inherit;width:100%;padding:12px;border:1px solid #cbdada;border-radius:10px;background:#fff;color:var(--ink);min-height:44px}
+textarea{min-height:70px;resize:vertical}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{border:0;border-radius:11px;padding:12px 14px;background:var(--brand);color:#fff;font:inherit;font-weight:750;min-height:44px;cursor:pointer}.btn.secondary{background:#e2f3f0;color:var(--brand2)}.btn.danger{background:#fff0ef;color:var(--red)}.btn.smallbtn{padding:7px 10px;min-height:34px;font-size:12px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.row + .row{margin-top:8px}.amount{font-weight:800;white-space:nowrap}.muted{color:var(--muted)}.empty{padding:18px;text-align:center;color:var(--muted);font-size:13px}.item{padding:12px 0;border-bottom:1px solid var(--line)}.item:last-child{border-bottom:0}.pill{display:inline-block;background:#e6f5f2;color:#0f766e;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:750}.bar{height:8px;background:#e7eeee;border-radius:99px;overflow:hidden;margin:8px 0}.bar>div{height:100%;background:var(--brand);border-radius:99px}.warn{color:var(--orange)}.over{color:var(--red)}.note{font-size:12px;color:var(--muted);line-height:1.5}.hidden{display:none!important}
+@media(min-width:600px){main{padding:20px 18px 90px}.big{font-size:34px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+ <div class="top"><div><h1>💚 Pocket BDT</h1><p>Your private, offline expense tracker</p></div><div style="text-align:right"><span class="pill" id="monthPill">This month</span></div></div>
+ <div class="balance"><div class="small">Remaining balance this month</div><div class="big" id="balance">৳0</div><div class="small" id="balanceHint">Add your salary to get started.</div></div>
+</div></header>
+<main>
+<section class="panel active" id="home">
+ <div class="stats">
+  <div class="stat"><div class="small">Salary / income</div><div class="v" id="income">৳0</div></div>
+  <div class="stat"><div class="small">Spent</div><div class="v" id="spent">৳0</div></div>
+  <div class="stat"><div class="small">Transactions</div><div class="v" id="count">0</div></div>
+ </div>
+ <div class="card" style="margin-top:12px"><div class="row"><h2 style="margin:0">This month's spending</h2><span class="small" id="spentPercent">0%</span></div><div class="bar"><div id="totalBar" style="width:0%"></div></div><div class="note" id="budgetSummary">Set budgets in the Budgets tab to track category limits.</div></div>
+ <div class="card"><div class="row"><h2 style="margin:0">Recent transactions</h2><button class="btn secondary smallbtn" onclick="showTab('history')">View all</button></div><div id="recentList"></div></div>
+ <div class="card"><h2>Quick tip</h2><p class="note">Record expenses as soon as you make them. Your data stays in this browser on this phone. Export a backup regularly—clearing browser data may erase records.</p></div>
+</section>
+
+<section class="panel" id="add">
+ <div class="card"><h2 id="entryTitle">Add an expense</h2>
+  <div class="grid2"><div><label for="amount">Amount (৳)</label><input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="e.g. 800" required></div><div><label for="date">Date</label><input id="date" type="date" required></div></div>
+  <label for="category">Category</label><select id="category"><option>Bazar</option><option>Fuel</option><option>Gas</option><option>Food</option><option>Bills</option><option>Family</option><option>Transport</option><option>Shopping</option><option>Mobile/Internet</option><option>Medical</option><option>Travel</option><option>Others</option></select>
+  <label for="note">Note (optional)</label><input id="note" maxlength="120" placeholder="e.g. vegetables, car fuel">
+  <div class="actions"><button class="btn" onclick="saveExpense()">Save expense</button><button class="btn secondary" onclick="clearExpenseForm()">Clear</button></div>
+  <p class="note" id="editHint"></p>
+ </div>
+ <div class="card"><h2>Record income / salary</h2><label for="salaryAmount">Amount received (৳)</label><input id="salaryAmount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Enter salary amount">
+  <div class="grid2"><div><label for="salaryDate">Received date</label><input id="salaryDate" type="date"></div><div><label for="incomeNote">Description</label><input id="incomeNote" maxlength="100" value="Monthly salary"></div></div>
+  <div class="actions"><button class="btn" onclick="saveIncome()">Save income</button></div><p class="note">Salary is recorded as income. It does not erase previous transactions. Monthly totals are based on the calendar month.</p>
+ </div>
+</section>
+
+<section class="panel" id="history">
+ <div class="card"><h2>Transaction history</h2><input id="search" placeholder="Search notes or categories…" oninput="renderHistory()">
+  <div class="grid2"><div><label for="filterMonth">Month</label><input id="filterMonth" type="month" onchange="renderHistory()"></div><div><label for="filterType">Type</label><select id="filterType" onchange="renderHistory()"><option value="all">All transactions</option><option value="expense">Expenses</option><option value="income">Income</option></select></div></div>
+  <label for="filterCategory">Category</label><select id="filterCategory" onchange="renderHistory()"><option value="all">All categories</option></select>
+  <div id="historyList"></div>
+ </div>
+</section>
+
+<section class="panel" id="budgets">
+ <div class="card"><h2>Monthly category budgets</h2><p class="note">Set a limit for each category. Budgets apply to the selected calendar month.</p>
+  <label for="budgetCategory">Category</label><select id="budgetCategory"></select>
+  <label for="budgetAmount">Monthly limit (৳)</label><input id="budgetAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 12000">
+  <div class="actions"><button class="btn" onclick="saveBudget()">Save budget</button></div>
+ </div>
+ <div class="card"><h2>Budget progress · <span id="budgetMonthLabel"></span></h2><div id="budgetList"></div></div>
+</section>
+
+<section class="panel" id="reports">
+ <div class="card"><h2>Monthly report</h2><label for="reportMonth">Choose month</label><input id="reportMonth" type="month" onchange="renderReports()">
+  <div class="stats" style="margin-top:12px"><div class="stat"><div class="small">Income</div><div class="v" id="reportIncome">৳0</div></div><div class="stat"><div class="small">Expenses</div><div class="v" id="reportSpent">৳0</div></div><div class="stat"><div class="small">Net</div><div class="v" id="reportNet">৳0</div></div></div>
+  <h3 style="margin-top:18px">Expenses by category</h3><div id="categoryReport"></div>
+ </div>
+ <div class="card"><h2>Backup & export</h2><p class="note">Export CSV for spreadsheets or JSON for a full backup. Keep a copy somewhere safe. Importing a JSON backup replaces the data currently stored in this browser.</p>
+  <div class="actions"><button class="btn" onclick="exportCSV()">Export CSV</button><button class="btn secondary" onclick="exportJSON()">Download JSON backup</button></div>
+  <label for="importFile">Restore JSON backup</label><input id="importFile" type="file" accept="application/json,.json">
+  <div class="actions"><button class="btn secondary" onclick="importJSON()">Restore backup</button></div>
+ </div>
+ <div class="card"><h2>Data safety</h2><p class="note">This app stores records in this browser on this device; it does not send them to a server. Browser storage is not the same as a guaranteed permanent database. Export JSON backups regularly, especially before changing phones or clearing browser data.</p><div class="actions"><button class="btn danger" onclick="clearAllData()">Delete all app data</button></div></div>
+</section>
+</main>
+<nav class="tabs">
+ <button class="active" data-tab="home" onclick="showTab('home')"><span>⌂</span>Home</button>
+ <button data-tab="add" onclick="showTab('add')"><span>＋</span>Add</button>
+ <button data-tab="history" onclick="showTab('history')"><span>☷</span>History</button>
+ <button data-tab="budgets" onclick="showTab('budgets')"><span>◉</span>Budgets</button>
+ <button data-tab="reports" onclick="showTab('reports')"><span>▥</span>Reports</button>
+</nav>
+<script>
+const KEY='pocket_bdt_data_v1';
+const CATS=['Bazar','Fuel','Gas','Food','Bills','Family','Transport','Shopping','Mobile/Internet','Medical','Travel','Others'];
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const thisMonth=()=>today().slice(0,7);
+let data={transactions:[],budgets:{},nextId:1}, editingId=null;
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||'null');if(x&&Array.isArray(x.transactions)){data={transactions:x.transactions,budgets:x.budgets||{},nextId:x.nextId||1}}}catch(e){}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch(e){alert('Could not save. Your browser storage may be full. Export a backup and free storage.');return false}}
+function money(n){return '৳'+Number(n||0).toLocaleString('en-BD',{maximumFractionDigits:2})}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function monthTransactions(m){return data.transactions.filter(t=>t.date&&t.date.slice(0,7)===m)}
+function totals(m){const ts=monthTransactions(m);const income=ts.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);const spent=ts.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);return {income,spent,net:income-spent,ts}}
+function showTab(id){document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));if(id==='history')renderHistory();if(id==='budgets')renderBudgets();if(id==='reports')renderReports();window.scrollTo({top:0,behavior:'smooth'})}
+function refresh(){const m=thisMonth(),t=totals(m);document.getElementById('monthPill').textContent=new Date(m+'-02').toLocaleDateString('en',{month:'long',year:'numeric'});document.getElementById('balance').textContent=money(t.net);document.getElementById('income').textContent=money(t.income);document.getElementById('spent').textContent=money(t.spent);document.getElementById('count').textContent=t.ts.length;document.getElementById('balanceHint').textContent=t.net<0?'Expenses exceed recorded income.':t.income?'Income minus expenses for this calendar month.':'Add your salary in the Add tab to start tracking.';const pct=t.income?Math.min(100,Math.round(t.spent/t.income*100)):0;document.getElementById('spentPercent').textContent=pct+'% of income spent';document.getElementById('totalBar').style.width=pct+'%';const bs=Object.entries(data.budgets).filter(([k,v])=>v>0);document.getElementById('budgetSummary').textContent=bs.length?bs.length+' category budgets set. Open Budgets to see progress.':'Set budgets in the Budgets tab to track category limits.';renderRecent();renderReports();renderBudgets();renderFilterCategories()}
+function renderRecent(){const el=document.getElementById('recentList');const arr=[...monthTransactions(thisMonth())].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).slice(0,5);el.innerHTML=arr.length?arr.map(t=>transactionHTML(t,false)).join(''):'<div class="empty">No transactions this month yet. Tap Add to record your first expense or salary.</div>'}
+function transactionHTML(t,actions=true){const inc=t.type==='income';return `<div class="item"><div class="row"><div><strong>${esc(inc?(t.category||'Income'):t.category)}</strong> ${inc?'<span class="pill">Income</span>':''}<div class="small">${esc(t.date)}${t.note?' · '+esc(t.note):''}</div></div><div style="text-align:right"><div class="amount ${inc?'':'muted'}">${inc?'+':'−'}${money(t.amount)}</div>${actions?`<div class="actions" style="justify-content:flex-end;margin-top:5px"><button class="btn secondary smallbtn" onclick="editTransaction(${t.id})">Edit</button><button class="btn danger smallbtn" onclick="deleteTransaction(${t.id})">Delete</button></div>`:''}</div></div></div>`}
+function clearExpenseForm(){editingId=null;document.getElementById('amount').value='';document.getElementById('date').value=today();document.getElementById('category').value='Bazar';document.getElementById('note').value='';document.getElementById('entryTitle').textContent='Add an expense';document.getElementById('editHint').textContent='';}
+function saveExpense(){const amount=Number(document.getElementById('amount').value),date=document.getElementById('date').value,category=document.getElementById('category').value,note=document.getElementById('note').value.trim();if(!(amount>0)||!Number.isFinite(amount)||!date){alert('Enter a valid amount and date.');return}if(editingId!==null){const t=data.transactions.find(x=>x.id===editingId);if(t){Object.assign(t,{amount,date,category,note,type:'expense'})}}else{data.transactions.push({id:data.nextId++,type:'expense',amount,date,category,note,createdAt:new Date().toISOString()})}if(persist()){clearExpenseForm();refresh();showTab('home')}}
+function saveIncome(){const amount=Number(document.getElementById('salaryAmount').value),date=document.getElementById('salaryDate').value,note=document.getElementById('incomeNote').value.trim()||'Income';if(!(amount>0)||!Number.isFinite(amount)||!date){alert('Enter a valid income amount and date.');return}data.transactions.push({id:data.nextId++,type:'income',amount,date,category:'Salary / Income',note,createdAt:new Date().toISOString()});if(persist()){document.getElementById('salaryAmount').value='';document.getElementById('incomeNote').value='Monthly salary';refresh();alert('Income saved. Your monthly balance has been updated.');}}
+function editTransaction(id){const t=data.transactions.find(x=>x.id===id);if(!t)return;if(t.type==='income'){alert('Income editing is not available in the quick form yet. You can delete it and record it again.');return}editingId=id;document.getElementById('amount').value=t.amount;document.getElementById('date').value=t.date;document.getElementById('category').value=CATS.includes(t.category)?t.category:'Others';document.getElementById('note').value=t.note||'';document.getElementById('entryTitle').textContent='Edit expense';document.getElementById('editHint').textContent='Editing transaction #'+id;showTab('add')}
+function deleteTransaction(id){if(!confirm('Delete this transaction? This cannot be undone unless you have a backup.'))return;data.transactions=data.transactions.filter(t=>t.id!==id);persist();refresh();renderHistory()}
+function renderHistory(){const q=(document.getElementById('search').value||'').toLowerCase(),m=document.getElementById('filterMonth').value,typ=document.getElementById('filterType').value,cat=document.getElementById('filterCategory').value;let arr=[...data.transactions].filter(t=>(!m||t.date.slice(0,7)===m)&&(typ==='all'||t.type===typ)&&(cat==='all'||t.category===cat)&&(`${t.category} ${t.note||''} ${t.date}`).toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);document.getElementById('historyList').innerHTML=arr.length?arr.map(t=>transactionHTML(t,true)).join(''):'<div class="empty">No matching transactions found.</div>'}
+function renderFilterCategories(){const el=document.getElementById('filterCategory'),cur=el.value;el.innerHTML='<option value="all">All categories</option>'+[...new Set([...CATS,...data.transactions.map(t=>t.category)])].map(c=>`<option>${esc(c)}</option>`).join('');if([...el.options].some(o=>o.value===cur))el.value=cur;const b=document.getElementById('budgetCategory'),bc=b.value;b.innerHTML=CATS.map(c=>`<option>${esc(c)}</option>`).join('');if(CATS.includes(bc))b.value=bc}
+function saveBudget(){const cat=document.getElementById('budgetCategory').value,amt=Number(document.getElementById('budgetAmount').value);if(!(amt>0)||!Number.isFinite(amt)){alert('Enter a budget amount greater than zero.');return}data.budgets[cat]=amt;if(persist()){document.getElementById('budgetAmount').value='';renderBudgets();refresh()}}
+function renderBudgets(){const el=document.getElementById('budgetList');if(!el)return;document.getElementById('budgetMonthLabel').textContent=new Date(thisMonth()+'-02').toLocaleDateString('en',{month:'long',year:'numeric'});const items=Object.entries(data.budgets).filter(([c,v])=>v>0);el.innerHTML=items.length?items.map(([c,limit])=>{const spent=monthTransactions(thisMonth()).filter(t=>t.type==='expense'&&t.category===c).reduce((s,t)=>s+t.amount,0),p=Math.round(spent/limit*100);return `<div class="item"><div class="row"><strong>${esc(c)}</strong><span class="amount ${p>=100?'over':p>=80?'warn':''}">${money(spent)} / ${money(limit)}</span></div><div class="bar"><div style="width:${Math.min(100,p)}%;background:${p>=100?'#b42318':p>=80?'#b45309':'#0f766e'}"></div></div><div class="row"><span class="small">${p}% used</span><button class="btn danger smallbtn" onclick="removeBudget('${esc(c).replace(/'/g,"&#39;")}')">Remove</button></div></div>`}).join(''):'<div class="empty">No budgets set yet. Add limits above.</div>'}
+function removeBudget(cat){if(confirm('Remove the budget for '+cat+'?')){delete data.budgets[cat];persist();renderBudgets();refresh()}}
+function renderReports(){const m=document.getElementById('reportMonth').value||thisMonth();const t=totals(m);document.getElementById('reportIncome').textContent=money(t.income);document.getElementById('reportSpent').textContent=money(t.spent);document.getElementById('reportNet').textContent=money(t.net);const by={};t.ts.filter(x=>x.type==='expense').forEach(x=>by[x.category]=(by[x.category]||0)+x.amount);const entries=Object.entries(by).sort((a,b)=>b[1]-a[1]);const el=document.getElementById('categoryReport');el.innerHTML=entries.length?entries.map(([c,v])=>{const p=t.spent?Math.round(v/t.spent*100):0;return `<div class="item"><div class="row"><strong>${esc(c)}</strong><span class="amount">${money(v)} <span class="small">(${p}%)</span></span></div><div class="bar"><div style="width:${p}%"></div></div></div>`}).join(''):'<div class="empty">No expenses recorded for this month.</div>'}
+function download(name,content,type){if(window.AndroidBridge&&window.AndroidBridge.saveFile){const bytes=new TextEncoder().encode(content);let binary='';for(let i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);window.AndroidBridge.saveFile(name,btoa(binary),type);return}const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
+function exportCSV(){const rows=[['ID','Type','Date','Category','Amount_BDT','Note','CreatedAt'],...data.transactions.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(t=>[t.id,t.type,t.date,t.category,t.amount,t.note||'',t.createdAt||''])];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');download('pocket-bdt-transactions-'+today()+'.csv','\ufeff'+csv,'text/csv;charset=utf-8')}
+function exportJSON(){download('pocket-bdt-backup-'+today()+'.json',JSON.stringify({app:'Pocket BDT',version:1,exportedAt:new Date().toISOString(),...data},null,2),'application/json')}
+function importJSON(){const f=document.getElementById('importFile').files[0];if(!f){alert('Choose a JSON backup file first.');return}const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!Array.isArray(x.transactions)||!x.budgets||typeof x.budgets!=='object')throw Error('Invalid backup');if(!confirm('Restore this backup? It will replace the current data in this browser. Export a backup of current data first if needed.'))return;data={transactions:x.transactions,budgets:x.budgets,nextId:x.nextId||Math.max(0,...x.transactions.map(t=>Number(t.id)||0))+1};if(!data.transactions.every(t=>Number(t.amount)>0&&t.date&&['income','expense'].includes(t.type)))throw Error('Invalid transactions');persist();refresh();alert('Backup restored.')}catch(e){alert('Could not restore: this does not appear to be a valid Pocket BDT JSON backup.')}};r.readAsText(f)}
+function clearAllData(){if(!confirm('Delete ALL Pocket BDT transactions and budgets from this browser? Export a backup first.'))return;if(!confirm('Final confirmation: permanently delete all app data on this device?'))return;data={transactions:[],budgets:{},nextId:1};persist();refresh();alert('App data cleared.')}
+load();
+document.getElementById('date').value=today();document.getElementById('salaryDate').value=today();document.getElementById('filterMonth').value=thisMonth();document.getElementById('reportMonth').value=thisMonth();renderFilterCategories();refresh();
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
+</script>
+</body>
+</html>
